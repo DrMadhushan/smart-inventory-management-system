@@ -2,9 +2,15 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Schema;
+use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
+/**
+ * Class AppServiceProvider.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -24,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Paginator::useBootstrap();
         Schema::defaultStringLength(191);
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
     }
 }
