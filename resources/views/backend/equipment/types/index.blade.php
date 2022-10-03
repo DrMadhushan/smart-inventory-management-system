@@ -37,16 +37,27 @@
                 <div class="container table-responsive pt-3">
                     <table class="table table-striped">
                         <tr>
+                            <th>Code</th>
                             <th>Title</th>
-                            <th>Subtitle</th>
+                            <th>Parent Category</th>
                             <th>Description</th>
                             <th>&nbsp;</th>
                         </tr>
 
-                        @foreach($EquipmentType as $equipmentType)
+                        @foreach($equipmentTypes as $equipmentType)
                             <tr>
+                                <td>{{ $equipmentType->inventoryCode()  }}</td>
                                 <td>{{ $equipmentType->title  }}</td>
-                                <td>{{ $equipmentType->subtitle ?? 'N/A' }}</td>
+                                <td>
+                                    @if( $equipmentType->parent() !== null)
+                                        <a href="{{ route('admin.equipment.types.show', $equipmentType->parent()->id) }}">
+                                            {{ $equipmentType->parent()->title }}
+                                        </a>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                {{--                                <td>{{ $equipmentType->subtitle ?? 'N/A' }}</td>--}}
                                 <td>{{ $equipmentType->description  }}</td>
                                 <td>
                                     <div class="d-flex px-0 mt-0 mb-0">
@@ -59,7 +70,7 @@
                                                class="btn btn-info btn-xs"><i class="fa fa-pencil" title="Edit"></i>
                                             </a>
                                             <a href="{{ route('admin.equipment.types.delete', $equipmentType)}}"
-                                               class="btn btn-danger btn-xs"><i class="fa fa-trash-o"
+                                               class="btn btn-danger btn-xs"><i class="fa fa-trash"
                                                                                 title="Delete"></i>
                                             </a>
                                         </div>
@@ -69,7 +80,7 @@
                             </tr>
                         @endforeach
                     </table>
-                    {{ $EquipmentType->links() }}
+                    {{ $equipmentTypes->links() }}
                 </div>
             </x-slot>
         </x-backend.card>

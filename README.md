@@ -6,11 +6,14 @@ Smart Inventory Management System for Department MakerSpace Lab
 
 ### Demo Credentials
 
-**Admin:** admin@admin.com  
+**Admin:** admin@example.com  
 **Password:** admin_user
 
-**User:** user@user.com  
+**User:** user@example.com  
 **Password:** regular_user
+
+**User:** lecturer@example.com  
+**Password:** lecturer_user
 
 ### Introduction
 
@@ -20,9 +23,26 @@ Laravel Boilerplate provides you with a massive head start on any size web appli
 
 ## Team of Developers
 - [Nuwan Jaliyagoda](http://github.com/NuwanJ)
+
+### Sprint 2A
 - [Tharmapalan Thanujan](http://github.com/thanujan96)
 - [Madhushan Ramalingam](https://github.com/DrMadhushan)
 - [Thilini Madushani](http://github.com/Thilini98)
+
+### Sprint 3A
+- [Ishan Fernando](https://github.com/ishanfdo18098)
+- [Adeepa Fernando](https://github.com/NipunFernando)
+- [Ridma Jayasundara ](https://github.com/ridmajayasundara)
+
+### Sprint 3B
+- [Sadia Jameel](https://github.com/SaadiaJameel)
+- [Sakuni Nimnadi](https://github.com/SakuniJayasinghe)
+- [Thamish Wanduragala](https://github.com/Thamish99)
+
+### Sprint 3C
+- [Karan R.](https://github.com/rasathuraikaran)
+- [Gowsigan A.](https://github.com/AnnalingamGowsigan)
+- [Muthuni De Alwis](https://github.com/muthuni-dealwis)
 
 
 ## Useful Commands and Instructions
@@ -34,6 +54,9 @@ Please make sure you already created database user account.
 ```
 // Install PHP dependencies
 composer install
+
+// If you received mmap() error, use this command 
+// php -d memory_limit=-1 /usr/local/bin/composer install
 
 // Update PHP dependencies
 composer update
@@ -107,7 +130,7 @@ php artisan test
 
 ```
 
-#### Resource Routes 
+#### Resource Routes
 
 |Verb	|URI	|Action	|Route Name |
 |:------|:------|:------|:----------|
@@ -118,4 +141,3 @@ php artisan test
 |GET	|/comments/{comment}/edit	|edit	|comments.edit
 |PUT/PATCH	|/comments/{comment}	|update	|comments.update
 |DELETE	|/comments/{comment}	|destroy	|comments.destroy
-

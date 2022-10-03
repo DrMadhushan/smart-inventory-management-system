@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\ComponentItem;
-// use App\Models\ComponentType;
+use App\Models\ComponentType;
+use App\Models\ItemLocations;
+use App\Models\Locations;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
+use Torann\GeoIP\Location;
 
 class ComponentItemController extends Controller
 {
@@ -17,10 +20,11 @@ class ComponentItemController extends Controller
      *
      * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
      */
+
     public function index()
     {
-        $component = ComponentItem::paginate(12);
-        return view('backend.component.items.index', compact('component'));
+        $components = ComponentItem::paginate(16);
+        return view("backend.component.items.index", compact('components'));
     }
 
     /**
@@ -30,8 +34,9 @@ class ComponentItemController extends Controller
      */
     public function create()
     {
-        $types = ComponentType::pluck('name', 'id');
-        return view('backend.component.items.create', compact('types'));
+        $types = ComponentType::pluck('title', 'id');
+        $locations = Locations::pluck('location', 'id');
+        return view('backend.component.items.create', compact('types','locations'));
     }
 
     /**
@@ -43,18 +48,21 @@ class ComponentItemController extends Controller
     public function store(Request $request)
     {
         $data = request()->validate([
-            'name' => 'string|required',
+            'title' => 'string|required',
             'brand' => 'string|nullable',
             'productCode' => 'string|nullable',
-            // 'component_type_id' => 'numeric|required',
+            'component_type_id' => 'numeric|required',
 
+            'location' => 'numeric|required',
             'specifications' => 'string|nullable',
             'description' => 'string|nullable',
+            'instructions' => 'string|nullable',
 
             'isAvailable' => 'nullable',
+            'isElectrical' => 'nullable',
+            'powerRating' => 'numeric|nullable',
+            'quantity' => 'numeric|nullable',
             'price' => 'numeric|nullable',
-            'type' => 'string|nullable',
-            'family' => 'string|nullable',
             'size' => 'string|nullable',   // [small, medium, large]
 
             'thumb' => 'image|nullable|mimes:jpeg,png,jpg,gif,svg|max:2048'
@@ -65,16 +73,29 @@ class ComponentItemController extends Controller
                 $data['thumb'] = $this->uploadThumb(null, $request->thumb, "component_items");
             }
 
-            $type = new ComponentItem($data);
+            $filtered_data = $data;
+            unset($filtered_data['location']);
+            $type = new ComponentItem($filtered_data);
 
             // Update checkbox condition
-            //$type->isElectrical = ($request->isElectrical != null);
+            $type->isAvailable = ($request->isAvailable != null);
+            $type->isElectrical = ($request->isElectrical != null);
 
+//            save first, otherwise the id is not there
             $type->save();
+
+            $data_for_location = [
+                'item_id' => $type->inventoryCode(),
+                'location_id' => $data['location']
+            ];
+            $location = new ItemLocations($data_for_location);
+
+
+            $location->save();
+//            dd($location);
             return redirect()->route('admin.component.items.index')->with('Success', 'component was created !');
 
         } catch (\Exception $ex) {
-            dd($ex);
             return abort(500);
         }
     }
@@ -87,7 +108,8 @@ class ComponentItemController extends Controller
      */
     public function show(ComponentItem $componentItem)
     {
-        return view('backend.component.items.show', compact('componentItem'));
+        $locations_array = $this->getLocationOfItem($componentItem);
+        return view('backend.component.items.show', compact("componentItem",'locations_array'));
     }
 
     /**
@@ -99,7 +121,10 @@ class ComponentItemController extends Controller
     public function edit(ComponentItem $componentItem)
     {
         $types = ComponentType::pluck('title', 'id');
-        return view('backend.component.items.edit', compact('types', 'componentItem'));
+        $this_item_location = ItemLocations::where('item_id',$componentItem->inventoryCode())->get()[0]['location_id'];
+//        dd($this_item_location);
+        $locations = Locations::pluck('location', 'id');
+        return view('backend.component.items.edit', compact('types', 'componentItem','locations','this_item_location'));
     }
 
     /**
@@ -107,24 +132,26 @@ class ComponentItemController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      * @param \App\Models\ComponentItem $componentItem
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ComponentItem $componentItem)
     {
-//         dd($request->request);
         $data = request()->validate([
-            'name' => 'string|required',
+            'title' => 'string|required',
             'brand' => 'string|nullable',
             'productCode' => 'string|nullable',
             'component_type_id' => 'numeric|required',
 
+            'location' => 'numeric|required',
             'specifications' => 'string|nullable',
             'description' => 'string|nullable',
+            'instructions' => 'string|nullable',
 
-            'isAvailable' => 'nullable',
+            'isAvailable' => 'boolean|nullable',
+            'isElectrical' => 'boolean|nullable',
+            'powerRating' => 'numeric|nullable',
+            'quantity' => 'numeric|nullable',
             'price' => 'numeric|nullable',
-            'type' => 'string|nullable',
-            'family' => 'string|nullable',
             'size' => 'string|nullable',   // [small, medium, large]
 
             'thumb' => 'image|nullable|mimes:jpeg,png,jpg,gif,svg|max:2048'
@@ -136,13 +163,23 @@ class ComponentItemController extends Controller
             }
 
             // Update checkbox condition
-            $componentItem->isAvailable = ($request->isAvailable != null);
+            $componentItem['isAvailable'] = isset($request->isAvailable) ? 1 : 0;
+            $componentItem['isElectrical'] = isset($request->isElectrical) ? 1 : 0;
 
-            $componentItem->update($data);
+            $filtered_data = $data;
+            unset($filtered_data['location']);
+            $componentItem->update($filtered_data);
+
+            $this_item_location = ItemLocations::where('item_id',$componentItem->inventoryCode())->get()[0];
+            $new_location_data = [
+                'location_id' => $data['location']
+            ];
+            $this_item_location->update($new_location_data);
+
+
             return redirect()->route('admin.component.items.index')->with('Success', 'Component was updated !');
 
         } catch (\Exception $ex) {
-            dd($ex);
             return abort(500);
         }
     }
@@ -172,10 +209,14 @@ class ComponentItemController extends Controller
             $this->deleteThumb($componentItem->thumbURL());
 
             $componentItem->delete();
+
+//            delete location entry
+            $this_item_location = ItemLocations::where('item_id',$componentItem->inventoryCode())->get()[0];
+            $this_item_location->delete();
+
             return redirect()->route('admin.component.items.index')->with('Success', 'Component was deleted !');
 
         } catch (\Exception $ex) {
-            dd($ex);
             return abort(500);
         }
     }
@@ -191,12 +232,11 @@ class ComponentItemController extends Controller
     // Private function to handle thumb images
     private function uploadThumb($currentURL, $newImage, $folder)
     {
-
         // Delete the existing image
         $this->deleteThumb($currentURL);
 
         $imageName = time() . '.' . $newImage->extension();
-        $newImage->move(public_path('img/'.$folder), $imageName);
+        $newImage->move(public_path('img/' . $folder), $imageName);
         $imagePath = "/img/$folder/" . $imageName;
         $image = Image::make(public_path($imagePath))->fit(360, 360);
         $image->save();

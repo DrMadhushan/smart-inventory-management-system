@@ -24,7 +24,7 @@
                                class="btn btn-info btn-xs"><i class="fa fa-pencil" title="Edit"></i>
                             </a>
                             <a href="{{ route('admin.equipment.types.delete', $equipmentType)}}"
-                               class="btn btn-danger btn-xs"><i class="fa fa-trash-o"
+                               class="btn btn-danger btn-xs"><i class="fa fa-trash"
                                                                 title="Delete"></i>
                             </a>
                         </div>
@@ -35,6 +35,18 @@
                     <tr>
                         <td>Code (to be finalized)</td>
                         <td>{{ $equipmentType->inventoryCode() }}</td>
+                    </tr>
+                    <tr>
+                        <td>Parent Category</td>
+                        <td>
+                            @if( $equipmentType->parent() !== null)
+                                <a href="{{ route('admin.equipment.types.show', $equipmentType->parent()->id) }}">
+                                    {{ $equipmentType->parent()->title }}
+                                </a>
+                            @else
+                                N/A
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <td>Subtitle</td>

@@ -4,7 +4,7 @@
 
 @section('breadcrumb-links')
     @include('backend.equipment.includes.breadcrumb-links')
-@endsection
+@endsection 
 
 @section('content')
     <div>
@@ -37,26 +37,28 @@
                 <div class="container table-responsive pt-3">
                     <table class="table table-striped">
                         <tr>
+                            <th>Code</th>
                             <th>Title</th>
                             <th>Product Code<br/>and Brand</th>
-                            <th>Electronic</th>
+                            <th>Quantity</th>
                             <th>Category</th>
                             <th>Price (LKR)</th>
                             <th>Dimensions(cm)<br/>W x L x H</th>
                             <th>Weight (g)</th>
                             <th>&nbsp;</th>
                         </tr>
-
+                        
                         @foreach($equipment as $eq)
                             <tr>
+                                <td>{{ $eq->inventoryCode()  }}</td>
                                 <td>{{ $eq->title  }}</td>
                                 <td>{{ $eq->productCode ?? 'N/A' }} ({{ $eq->brand ?? 'N/A' }})</td>
-                                <td>{{ ($eq->isElectrical == 1) ? 'Yes' : 'No' }}</td>
+                                <td>{{ $eq->quantity }}</td>
                                 <td>
                                     @if($eq->equipment_type() != null)
-                                    <a href="{{ route('admin.equipment.types.show', $eq->equipment_type) }}">
-                                        {{ $eq->equipment_type['title'] }}
-                                    </a>
+                                        <a href="{{ route('admin.equipment.types.show', $eq->equipment_type) }}">
+                                            {{ $eq->equipment_type['title'] }}
+                                        </a>
                                     @endif
                                 </td>
                                 <td>{{ $eq->price }}</td>
@@ -74,7 +76,7 @@
                                                class="btn btn-info btn-xs"><i class="fa fa-pencil" title="Edit"></i>
                                             </a>
                                             <a href="{{ route('admin.equipment.items.delete', $eq)}}"
-                                               class="btn btn-danger btn-xs"><i class="fa fa-trash-o"
+                                               class="btn btn-danger btn-xs"><i class="fa fa-trash"
                                                                                 title="Delete"></i>
                                             </a>
                                         </div>
